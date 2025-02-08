@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Background Remover</title>
+  <style>
+    /* Intro Animation */
+.intro {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 1000;
+  animation: fadeOut 1s ease-in-out 5s forwards;
+}
+
+.intro h1 {
+  font-size: 3rem;
+  background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: zoomIn 2s ease-in-out;
+}
+
+@keyframes zoomIn {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+    /* General Styles */
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: bold;
+      background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0;
+    }
+
+    /* Container */
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+      margin: 2rem auto;
+      position: relative;
+    }
+
+    /* Upload Section */
+    .upload-section {
+      margin-bottom: 2rem;
+    }
+
+    .upload-label {
+      display: inline-block;
+      background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      font-size: 1rem;
+      box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+    }
+
+    .upload-label:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 20px rgba(0, 210, 255, 0.6);
+    }
+
+    #file-input {
+      display: none;
+    }
+
+    /* Result Section */
+    .result-section {
+      display: none;
+      margin-top: 2rem;
+    }
+
+    .result-section img {
+      max-width: 100%;
+      border-radius: 15px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .download-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      margin-top: 1rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      font-size: 1rem;
+      box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+    }
+
+    .download-btn:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 20px rgba(0, 210, 255, 0.6);
+    }
+
+    /* Background Customization Section */
+    .background-customization {
+      margin-top: 2rem;
+      display: none;
+    }
+
+    .background-customization h3 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .background-options {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .background-options button {
+      background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+    }
+
+    .background-options button:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 20px rgba(0, 210, 255, 0.6);
+    }
+
+    #color-picker {
+      width: 50px;
+      height: 40px;
+      padding: 5px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+      box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+    }
+
+    /* Loading Indicator */
+    .loading {
+      display: none;
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      color: #00d2ff;
+    }
+
+    /* Watermark */
+    .watermark {
+      position: moving;
+      bottom: 400px;
+      right: 1340px;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 2rem;
+      }
+
+      .container {
+        padding: 1.5rem;
+      }
+
+      .upload-label, .download-btn, .background-options button {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+      }
+
+      .watermark {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="intro">
+    <h1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="logo.png" width="120" height="120"><br>King BG Remover<br> &nbsp;By : Rabi Bhatti</h1>
+    
+  </div>
+  <!-- Header -->
+  <header>
+    <h1>KING BG Remover</h1>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container">
+    <h2>Remove Background Like a Pro</h2>
+    <p>Upload an image to remove the background instantly.</p>
+
+    <!-- Upload Section -->
+    <div class="upload-section">
+      <label for="file-input" class="upload-label">Upload Image</label>
+      <input type="file" id="file-input" accept="image/*">
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading" id="loading">Processing...</div>
+
+    <!-- Result Section -->
+    <div class="result-section" id="result-section">
+      <img id="result-image" src="" alt="Processed Image">
+      <a id="download-link" class="download-btn" download="no-bg.png">Download Image</a>
+    </div>
+
+    <!-- Background Customization Section -->
+    <div class="background-customization" id="background-customization">
+      <h3>Add Custom Background</h3>
+      <div class="background-options">
+        <button id="color-background">Solid Color</button>
+        <input type="color" id="color-picker" value="#ffffff">
+        <button id="image-background">Image Background</button>
+        <input type="file" id="bg-image-input" accept="image/*" style="display: none;">
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- Watermark -->
+  <div class="watermark">rabibhatii</div>
+
+  <script>
+    const fileInput = document.getElementById('file-input');
+    const resultSection = document.getElementById('result-section');
+    const resultImage = document.getElementById('result-image');
+    const downloadLink = document.getElementById('download-link');
+    const loading = document.getElementById('loading');
+    const backgroundCustomization = document.getElementById('background-customization');
+    const colorPicker = document.getElementById('color-picker');
+    const bgImageInput = document.getElementById('bg-image-input');
+    const colorBackgroundBtn = document.getElementById('color-background');
+    const imageBackgroundBtn = document.getElementById('image-background');
+
+    let processedImageUrl = null;
+
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        loading.style.display = 'block';
+        resultSection.style.display = 'none';
+        backgroundCustomization.style.display = 'none';
+
+        const formData = new FormData();
+        formData.append('image_file', file);
+
+        try {
+          const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+            method: 'POST',
+            headers: {
+              'X-Api-Key': 'bYwqLzcwPGUi27dn57r5fNse', // Your API key
+            },
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to remove background');
+          }
+
+          const blob = await response.blob();
+          processedImageUrl = URL.createObjectURL(blob);
+
+          resultImage.src = processedImageUrl;
+          downloadLink.href = processedImageUrl;
+          resultSection.style.display = 'block';
+          backgroundCustomization.style.display = 'block';
+        } catch (error) {
+          console.error('Error:', error);
+          alert('An error occurred while processing the image.');
+        } finally {
+          loading.style.display = 'none';
+        }
+      }
+    });
+
+    // Add Solid Color Background
+    colorBackgroundBtn.addEventListener('click', () => {
+      const color = colorPicker.value;
+      applyBackground(color);
+    });
+
+    // Add Image Background
+    imageBackgroundBtn.addEventListener('click', () => {
+      bgImageInput.click();
+    });
+
+    bgImageInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          applyBackground(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Function to Apply Background
+    function applyBackground(background) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      const img = new Image();
+      img.src = processedImageUrl;
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        // Draw the background
+        if (typeof background === 'string' && background.startsWith('#')) {
+          // Solid color
+          ctx.fillStyle = background;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else {
+          // Image background
+          const bgImg = new Image();
+          bgImg.src = background;
+          bgImg.onload = () => {
+            ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resultImage.src = canvas.toDataURL();
+            downloadLink.href = canvas.toDataURL();
+          };
+          return;
+        }
+
+        // Draw the processed image on top
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resultImage.src = canvas.toDataURL();
+        downloadLink.href = canvas.toDataURL();
+      };
+    }
+  </script>
+</body>
+</html>
